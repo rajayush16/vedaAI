@@ -46,6 +46,69 @@ export async function createAssignmentWithJob(input: unknown, teacherId: string)
   };
 }
 
+export async function updateAssignmentWithJob(
+  assignmentId: string,
+  input: unknown,
+  teacherId: string,
+) {
+  const parsed = assignmentInputSchema.parse(input);
+
+  const assignment = await AssignmentModel.findOneAndUpdate(
+    {
+      _id: assignmentId,
+      teacherId,
+    },
+    {
+      ...parsed,
+      latestJobId: undefined,
+      latestPaperId: undefined,
+    },
+    {
+      new: true,
+    },
+  );
+
+  if (!assignment) {
+    return null;
+  }
+
+  await GeneratedPaperModel.deleteMany({ assignmentId: assignment._id });
+  await GenerationJobModel.deleteMany({ assignmentId: assignment._id });
+
+  const generationJob = await GenerationJobModel.create({
+    assignmentId: assignment._id,
+    teacherId,
+    status: "queued",
+  });
+
+  assignment.latestJobId = generationJob._id;
+  assignment.latestPaperId = undefined;
+  await assignment.save();
+
+  const queuedJob = await generationQueue.add(generationJobName, {
+    assignmentId: String(assignment._id),
+    generationJobId: String(generationJob._id),
+  });
+
+  generationJob.bullJobId = String(queuedJob.id);
+  await generationJob.save();
+
+  realtimeGateway.broadcast({
+    type: "job-update",
+    payload: {
+      jobId: String(generationJob._id),
+      assignmentId: String(assignment._id),
+      status: "queued",
+      message: "Assignment update queued for regeneration",
+    },
+  });
+
+  return {
+    assignmentId: String(assignment._id),
+    jobId: String(generationJob._id),
+  };
+}
+
 export async function listAssignments(teacherId: string, search?: string) {
   const query = {
     teacherId,
@@ -108,6 +171,22 @@ export async function getAssignmentWithOutput(assignmentId: string, teacherId: s
     latestJob,
     latestPaper,
   };
+}
+
+export async function deleteAssignment(assignmentId: string, teacherId: string) {
+  const assignment = await AssignmentModel.findOneAndDelete({
+    _id: assignmentId,
+    teacherId,
+  }).lean<{ _id: string } | null>();
+
+  if (!assignment) {
+    return false;
+  }
+
+  await GeneratedPaperModel.deleteMany({ assignmentId: assignment._id });
+  await GenerationJobModel.deleteMany({ assignmentId: assignment._id });
+
+  return true;
 }
 
 export async function attachGeneratedPaper(

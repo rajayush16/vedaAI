@@ -1,9 +1,9 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { useAppStore } from "../store/app-store";
-import { createAssignment } from "../lib/api";
+import { createAssignment, fetchAssignmentDetail, updateAssignment } from "../lib/api";
 
 const questionTypeOptions = [
   "Multiple Choice Questions",
@@ -16,6 +16,9 @@ const questionTypeOptions = [
 
 export function AssignmentForm() {
   const router = useRouter();
+  const params = useParams<{ id?: string }>();
+  const assignmentId = typeof params.id === "string" ? params.id : undefined;
+  const isEditMode = Boolean(assignmentId);
   const draft = useAppStore((state) => state.draft);
   const updateDraft = useAppStore((state) => state.updateDraft);
   const addQuestionType = useAppStore((state) => state.addQuestionType);
@@ -26,6 +29,7 @@ export function AssignmentForm() {
   const [errors, setErrors] = useState<string[]>([]);
   const [materialFile, setMaterialFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingDraft, setIsLoadingDraft] = useState(isEditMode);
 
   const totalQuestions = useMemo(
     () => draft.questionTypes.reduce((sum, item) => sum + item.count, 0),
@@ -35,6 +39,53 @@ export function AssignmentForm() {
     () => draft.questionTypes.reduce((sum, item) => sum + item.count * item.marks, 0),
     [draft.questionTypes],
   );
+
+  useEffect(() => {
+    if (!assignmentId) {
+      return;
+    }
+
+    let active = true;
+
+    fetchAssignmentDetail(assignmentId)
+      .then((response) => {
+        if (!active) {
+          return;
+        }
+
+        updateDraft({
+          title: response.assignment.title,
+          subject: response.assignment.subject,
+          className: response.assignment.className,
+          schoolName: response.assignment.schoolName,
+          durationMinutes: response.assignment.durationMinutes,
+          dueDate: response.assignment.dueDate,
+          instructions: response.assignment.instructions ?? "",
+          materialText: response.assignment.materialText ?? "",
+          materialFileName: response.assignment.materialFileName ?? "",
+          questionTypes:
+            response.assignment.questionTypes?.length
+              ? response.assignment.questionTypes
+              : draft.questionTypes,
+        });
+      })
+      .catch((loadError) => {
+        if (active) {
+          setErrors([
+            loadError instanceof Error ? loadError.message : "Failed to load assignment",
+          ]);
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setIsLoadingDraft(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [assignmentId, draft.questionTypes, updateDraft]);
 
   function validate() {
     const nextErrors: string[] = [];
@@ -82,11 +133,15 @@ export function AssignmentForm() {
         payload.set("material", materialFile);
       }
 
-      const response = await createAssignment(payload);
+      const response = assignmentId
+        ? await updateAssignment(assignmentId, payload)
+        : await createAssignment(payload);
       setActiveJob(response.assignmentId, {
         jobId: response.jobId,
         status: "queued",
-        message: "Assignment queued for generation",
+        message: isEditMode
+          ? "Assignment update queued for regeneration"
+          : "Assignment queued for generation",
       });
       resetDraft();
       router.push(`/assignments/${response.assignmentId}`);
@@ -94,11 +149,17 @@ export function AssignmentForm() {
       setErrors([
         submissionError instanceof Error
           ? submissionError.message
-          : "Failed to create assignment",
+          : isEditMode
+            ? "Failed to update assignment"
+            : "Failed to create assignment",
       ]);
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  if (isLoadingDraft) {
+    return <div className="loading-panel">Loading assignment...</div>;
   }
 
   return (
@@ -110,8 +171,12 @@ export function AssignmentForm() {
       <section className="form-card">
         <div className="form-card-header">
           <div>
-            <h2>Assignment Details</h2>
-            <p>Basic information about your assignment</p>
+            <h2>{isEditMode ? "Edit Assignment" : "Assignment Details"}</h2>
+            <p>
+              {isEditMode
+                ? "Update the assignment and regenerate the latest output"
+                : "Basic information about your assignment"}
+            </p>
           </div>
         </div>
 
@@ -296,7 +361,9 @@ export function AssignmentForm() {
           ← Previous
         </button>
         <button className="primary-button" type="submit">
-          {isSubmitting ? "Submitting..." : "Next →"}
+          {isSubmitting
+            ? (isEditMode ? "Saving..." : "Submitting...")
+            : (isEditMode ? "Save Changes" : "Next →")}
         </button>
       </div>
     </form>

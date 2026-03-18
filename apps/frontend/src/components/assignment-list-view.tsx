@@ -3,15 +3,18 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { fetchAssignments } from "../lib/api";
+import { deleteAssignment, fetchAssignments } from "../lib/api";
 import { useAppStore } from "../store/app-store";
 
 export function AssignmentListView() {
   const router = useRouter();
   const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
   const [showSeedHint, setShowSeedHint] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const assignments = useAppStore((state) => state.assignments);
   const search = useAppStore((state) => state.search);
   const seedAssignments = useAppStore((state) => state.seedAssignments);
@@ -22,6 +25,19 @@ export function AssignmentListView() {
   useEffect(() => {
     setShowSeedHint(assignments.length === 0);
   }, [assignments.length]);
+
+  useEffect(() => {
+    function handleOutsideClick(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setOpenMenuId(null);
+      }
+    }
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -55,9 +71,7 @@ export function AssignmentListView() {
             return;
           }
 
-          setError(
-            message,
-          );
+          setError(message);
         }
       })
       .finally(() => {
@@ -81,19 +95,43 @@ export function AssignmentListView() {
     );
   }, [assignments, search]);
 
+  async function handleDelete(assignmentId: string) {
+    const confirmed = window.confirm("Delete this assignment?");
+    if (!confirmed) {
+      return;
+    }
+
+    setDeletingId(assignmentId);
+    try {
+      await deleteAssignment(assignmentId);
+      setAssignments(assignments.filter((assignment) => assignment.id !== assignmentId));
+      setOpenMenuId(null);
+    } catch (deleteError) {
+      setError(
+        deleteError instanceof Error ? deleteError.message : "Failed to delete assignment",
+      );
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   if (loading) {
     return <div className="loading-panel">Loading assignments...</div>;
   }
 
   if (error) {
-    return <div className="error-stack"><p>{error}</p></div>;
+    return (
+      <div className="error-stack">
+        <p>{error}</p>
+      </div>
+    );
   }
 
   if (assignments.length === 0) {
     return (
       <div className="empty-state">
         <div className="empty-illustration">
-          <span>✕</span>
+          <span>x</span>
         </div>
         <h2>No assignments yet</h2>
         <p>
@@ -141,14 +179,40 @@ export function AssignmentListView() {
               <Link href={`/assignments/${assignment.id}`} className="assignment-card-title">
                 {assignment.title}
               </Link>
-              <button
-                className="menu-dots"
-                type="button"
-                aria-label="Open assignment"
-                onClick={() => router.push(`/assignments/${assignment.id}`)}
+              <div
+                className="assignment-menu"
+                ref={openMenuId === assignment.id ? menuRef : null}
               >
-                •••
-              </button>
+                <button
+                  className="menu-dots"
+                  type="button"
+                  aria-label="Assignment options"
+                  onClick={() =>
+                    setOpenMenuId((current) =>
+                      current === assignment.id ? null : assignment.id,
+                    )
+                  }
+                >
+                  ...
+                </button>
+                {openMenuId === assignment.id ? (
+                  <div className="assignment-menu-popover">
+                    <button
+                      type="button"
+                      onClick={() => router.push(`/assignments/${assignment.id}/edit`)}
+                    >
+                      Edit assignment
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(assignment.id)}
+                      disabled={deletingId === assignment.id}
+                    >
+                      {deletingId === assignment.id ? "Deleting..." : "Delete assignment"}
+                    </button>
+                  </div>
+                ) : null}
+              </div>
             </div>
             <div className="assignment-meta">
               <span>

@@ -60,6 +60,15 @@ export type AssignmentDetailPayload = {
     schoolName: string;
     dueDate: string;
     durationMinutes: number;
+    instructions?: string;
+    materialText?: string;
+    materialFileName?: string;
+    questionTypes?: {
+      id: string;
+      type: string;
+      count: number;
+      marks: number;
+    }[];
   };
   latestJob: {
     _id: string;
@@ -118,6 +127,16 @@ export async function createAssignment(payload: FormData) {
   );
 }
 
+export async function updateAssignment(id: string, payload: FormData) {
+  return parseJsonResponse<{ assignmentId: string; jobId: string }>(
+    await fetch(`${apiBaseUrl}/api/assignments/${id}`, {
+      method: "PATCH",
+      body: payload,
+      credentials: "include",
+    }),
+  );
+}
+
 export async function fetchAssignmentDetail(id: string) {
   return parseJsonResponse<AssignmentDetailPayload>(
     await fetch(`${apiBaseUrl}/api/assignments/${id}`, {
@@ -125,6 +144,20 @@ export async function fetchAssignmentDetail(id: string) {
       cache: "no-store",
     }),
   );
+}
+
+export async function deleteAssignment(id: string) {
+  await fetch(`${apiBaseUrl}/api/assignments/${id}`, {
+    method: "DELETE",
+    credentials: "include",
+  }).then(async (response) => {
+    if (!response.ok) {
+      const error = await response
+        .json()
+        .catch(() => ({ message: "Request failed" as string }));
+      throw new Error(error.message || "Request failed");
+    }
+  });
 }
 
 export async function regenerateAssignment(id: string) {

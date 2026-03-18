@@ -295,6 +295,12 @@ button {
   background: rgba(31, 31, 31, 0.05);
 }
 
+.school-card,
+.teacher-pill,
+.assignment-menu {
+  position: relative;
+}
+
 .avatar-circle {
   display: grid;
   width: 48px;
@@ -772,6 +778,36 @@ button {
   color: var(--muted);
   font-size: 1.3rem;
   line-height: 1;
+}
+
+.assignment-menu-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 10;
+  min-width: 180px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 20px 40px rgba(130, 123, 120, 0.18);
+}
+
+.assignment-menu-popover button {
+  width: 100%;
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 12px;
+  text-align: left;
+}
+
+.assignment-menu-popover button:hover {
+  background: rgba(31, 31, 31, 0.06);
+}
+
+.assignment-menu-popover button:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 
 .assignment-meta {
