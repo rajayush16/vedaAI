@@ -16,13 +16,9 @@ function isActive(pathname: string, href: string, label: string) {
 }
 
 export function DashboardShell({
-  title,
-  subtitle,
   actions,
   children,
 }: {
-  title: string;
-  subtitle: string;
   actions?: ReactNode;
   children: ReactNode;
 }) {
@@ -30,6 +26,16 @@ export function DashboardShell({
   const router = useRouter();
   const teacher = useAppStore((state) => state.teacher) ?? demoTeacher;
   const logout = useAppStore((state) => state.logout);
+  const pageContent =
+    pathname === "/assignments/new"
+      ? {
+          title: "Create Assignment",
+          subtitle: "Set up a new assignment for your students",
+        }
+      : {
+          title: "Assignments",
+          subtitle: "Manage and create assignments for your classes.",
+        };
 
   return (
     <div className="dashboard-shell">
@@ -94,7 +100,7 @@ export function DashboardShell({
             </button>
             <div>
               <p className="crumb-label">Assignment</p>
-              <h1>{title}</h1>
+              <h1>{pageContent.title}</h1>
             </div>
           </div>
 
@@ -111,16 +117,16 @@ export function DashboardShell({
         </header>
 
         <div className="page-heading mobile-only">
-          <p className="page-title">{title}</p>
-          <p className="page-subtitle">{subtitle}</p>
+          <p className="page-title">{pageContent.title}</p>
+          <p className="page-subtitle">{pageContent.subtitle}</p>
         </div>
 
         <section className="page-panel">
           <div className="page-heading desktop-only heading-in-panel">
             <p className="status-dot" />
             <div>
-              <p className="page-title">{title}</p>
-              <p className="page-subtitle">{subtitle}</p>
+              <p className="page-title">{pageContent.title}</p>
+              <p className="page-subtitle">{pageContent.subtitle}</p>
             </div>
           </div>
 

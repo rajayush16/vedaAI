@@ -6,12 +6,5 @@ export default function DashboardLayout({
 }: Readonly<{
   children: ReactNode;
 }>) {
-  return (
-    <DashboardShell
-      title="Assignments"
-      subtitle="Manage and create assignments for your classes."
-    >
-      {children}
-    </DashboardShell>
-  );
+  return <DashboardShell>{children}</DashboardShell>;
 }
