@@ -3,12 +3,16 @@
   "private": true,
   "version": "1.0.0",
   "workspaces": [
-    "apps/*"
+    "apps/*",
+    "packages/*"
   ],
   "scripts": {
     "dev:frontend": "npm run dev --workspace frontend",
     "dev:backend": "npm run dev --workspace backend",
-    "build": "npm run build --workspace frontend",
+    "dev:worker": "npm run dev:worker --workspace backend",
+    "build": "npm run build --workspace @vedaai/shared && npm run build --workspace backend && npm run build --workspace frontend",
+    "build:frontend": "npm run build --workspace frontend",
+    "build:backend": "npm run build --workspace backend",
     "start:frontend": "npm run start --workspace frontend",
     "start:backend": "npm run start --workspace backend"
   }
