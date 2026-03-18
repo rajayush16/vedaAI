@@ -4,7 +4,6 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { AssignmentInput } from "@vedaai/shared";
 import { seededAssignments, demoTeacher } from "../data/demo";
-import { sessionCookieName } from "../lib/constants";
 
 export type AssignmentCard = {
   id: string;
@@ -66,14 +65,6 @@ type AppState = {
   resetDraft: () => void;
 };
 
-function setSessionCookie() {
-  document.cookie = `${sessionCookieName}=active; path=/; max-age=604800; samesite=lax`;
-}
-
-function clearSessionCookie() {
-  document.cookie = `${sessionCookieName}=; path=/; max-age=0; samesite=lax`;
-}
-
 function createQuestionTypeRow(index: number): QuestionTypeDraft {
   const presets = [
     "Multiple Choice Questions",
@@ -123,13 +114,11 @@ export const useAppStore = create<AppState>()(
       draft: createEmptyDraft(),
       activeJobs: {},
       login: () => {
-        setSessionCookie();
         set({
           teacher: demoTeacher,
         });
       },
       logout: () => {
-        clearSessionCookie();
         set({
           teacher: null,
           assignments: [],

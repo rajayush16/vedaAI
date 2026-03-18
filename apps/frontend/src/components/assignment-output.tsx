@@ -23,6 +23,7 @@ export function AssignmentOutput() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [regenerating, setRegenerating] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const activeJob = useAppStore((state) => state.activeJobs[assignmentId]);
   const setActiveJob = useAppStore((state) => state.setActiveJob);
 
@@ -110,6 +111,19 @@ export function AssignmentOutput() {
   const { assignment, latestPaper } = detail;
   const status = activeJob?.status ?? detail.latestJob?.status ?? "queued";
 
+  async function handleDownload() {
+    if (!latestPaper) {
+      return;
+    }
+
+    setDownloading(true);
+    try {
+      window.print();
+    } finally {
+      setDownloading(false);
+    }
+  }
+
   return (
     <div className="output-screen">
       <section className="output-toolbar">
@@ -121,8 +135,13 @@ export function AssignmentOutput() {
           <p>Status: {status}</p>
         </div>
         <div className="stack-inline">
-          <button className="secondary-button" type="button">
-            Download as PDF
+          <button
+            className="secondary-button"
+            type="button"
+            onClick={handleDownload}
+            disabled={!latestPaper || downloading}
+          >
+            {downloading ? "Opening print..." : "Download as PDF"}
           </button>
           <button
             className="primary-button"
@@ -200,8 +219,8 @@ export function AssignmentOutput() {
           <section className="paper-section answer-key">
             <h3>Answer Key</h3>
             <ol className="answer-list">
-              {latestPaper.answerKey.map((item) => (
-                <li key={item.questionNumber}>
+              {latestPaper.answerKey.map((item, index) => (
+                <li key={`${item.questionNumber}-${index}`}>
                   <strong>{item.questionNumber}.</strong> {item.answer}
                 </li>
               ))}

@@ -70,18 +70,23 @@ export function DashboardShell({
         </nav>
 
         <div className="sidebar-footer">
-          <button className="settings-link" type="button" onClick={() => router.push("/assignments")}>
+          <button className="settings-link" type="button" onClick={() => router.push("/settings")}>
             <AppIcon name="square" className="nav-icon" />
             Settings
           </button>
 
-          <div className="school-card">
+          <button
+            className="school-card"
+            type="button"
+            onClick={() => router.push("/settings")}
+            aria-label="Open school settings"
+          >
             <div className="avatar-circle">{teacher.avatarInitials}</div>
             <div>
               <p className="school-name">{teacher.schoolName}</p>
               <p className="school-city">{teacher.city}</p>
             </div>
-          </div>
+          </button>
           <button
             className="ghost-inline-button"
             type="button"
@@ -113,10 +118,15 @@ export function DashboardShell({
             <button className="icon-button" type="button">
               <AppIcon name="bell" className="nav-icon" />
             </button>
-            <div className="teacher-pill">
+            <button
+              className="teacher-pill"
+              type="button"
+              onClick={() => router.push("/settings")}
+              aria-label="Open teacher profile"
+            >
               <div className="avatar-circle small">{teacher.avatarInitials}</div>
               <span>{teacher.name}</span>
-            </div>
+            </button>
           </div>
         </header>
 

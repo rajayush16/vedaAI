@@ -1,11 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { fetchAssignments } from "../lib/api";
 import { useAppStore } from "../store/app-store";
 
 export function AssignmentListView() {
+  const router = useRouter();
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
   const [showSeedHint, setShowSeedHint] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -14,6 +17,7 @@ export function AssignmentListView() {
   const seedAssignments = useAppStore((state) => state.seedAssignments);
   const setSearch = useAppStore((state) => state.setSearch);
   const setAssignments = useAppStore((state) => state.setAssignments);
+  const logout = useAppStore((state) => state.logout);
 
   useEffect(() => {
     setShowSeedHint(assignments.length === 0);
@@ -40,10 +44,19 @@ export function AssignmentListView() {
       })
       .catch((requestError) => {
         if (active) {
-          setError(
+          const message =
             requestError instanceof Error
               ? requestError.message
-              : "Unable to load assignments",
+              : "Unable to load assignments";
+
+          if (message === "Unauthorized" || message === "Session expired") {
+            logout();
+            router.push("/login");
+            return;
+          }
+
+          setError(
+            message,
           );
         }
       })
@@ -56,7 +69,7 @@ export function AssignmentListView() {
     return () => {
       active = false;
     };
-  }, [setAssignments]);
+  }, [logout, router, setAssignments]);
 
   const filteredAssignments = useMemo(() => {
     if (!search.trim()) {
@@ -105,10 +118,15 @@ export function AssignmentListView() {
   return (
     <div className="assignment-list-view">
       <div className="filters-row">
-        <button className="filter-button" type="button">
+        <button
+          className="filter-button"
+          type="button"
+          onClick={() => searchInputRef.current?.focus()}
+        >
           Filter By
         </button>
         <input
+          ref={searchInputRef}
           className="search-input"
           value={search}
           onChange={(event) => setSearch(event.target.value)}
@@ -123,7 +141,12 @@ export function AssignmentListView() {
               <Link href={`/assignments/${assignment.id}`} className="assignment-card-title">
                 {assignment.title}
               </Link>
-              <button className="menu-dots" type="button" aria-label="Assignment options">
+              <button
+                className="menu-dots"
+                type="button"
+                aria-label="Open assignment"
+                onClick={() => router.push(`/assignments/${assignment.id}`)}
+              >
                 •••
               </button>
             </div>
