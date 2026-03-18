@@ -78,6 +78,16 @@ export type AssignmentDetailPayload = {
   latestPaper: GeneratedPaperPayload | null;
 };
 
+export type JobUpdatePayload = {
+  jobId: string;
+  assignmentId: string;
+  jobKind: "generation" | "pdf";
+  status: "queued" | "processing" | "completed" | "failed";
+  message?: string;
+  downloadPath?: string;
+  fileName?: string;
+};
+
 export async function loginTeacher(email: string, password: string) {
   return parseJsonResponse<{ teacher: TeacherPayload }>(
     await fetch(`${apiBaseUrl}/api/auth/login`, {
@@ -167,6 +177,40 @@ export async function regenerateAssignment(id: string) {
       credentials: "include",
     }),
   );
+}
+
+export async function requestPdfExport(id: string) {
+  return parseJsonResponse<{ jobId: string; status: "queued" }>(
+    await fetch(`${apiBaseUrl}/api/assignments/${id}/export-pdf`, {
+      method: "POST",
+      credentials: "include",
+    }),
+  );
+}
+
+export async function downloadPdfExport(assignmentId: string, jobId: string) {
+  const response = await fetch(
+    `${apiBaseUrl}/api/assignments/${assignmentId}/export-pdf/${jobId}`,
+    {
+      credentials: "include",
+    },
+  );
+
+  if (!response.ok) {
+    const error = await response
+      .json()
+      .catch(() => ({ message: "Request failed" as string }));
+    throw new Error(error.message || "Request failed");
+  }
+
+  const blob = await response.blob();
+  const disposition = response.headers.get("content-disposition");
+  const fileNameMatch = disposition?.match(/filename=\"?([^"]+)\"?/i);
+
+  return {
+    blob,
+    fileName: fileNameMatch?.[1] ?? "assignment-paper.pdf",
+  };
 }
 
 export function createJobSocket() {

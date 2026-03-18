@@ -3,10 +3,17 @@ import { env } from "../config";
 
 export const generationQueueName = "assignment-generation";
 export const generationJobName = "generate-paper";
+export const pdfQueueName = "assignment-pdf";
+export const pdfJobName = "generate-pdf";
 
 export type GenerationJobPayload = {
   assignmentId: string;
   generationJobId: string;
+};
+
+export type PdfJobPayload = {
+  assignmentId: string;
+  pdfJobId: string;
 };
 
 export const generationQueue = new Queue<
@@ -18,3 +25,12 @@ export const generationQueue = new Queue<
     url: env.REDIS_URL,
   },
 });
+
+export const pdfQueue = new Queue<PdfJobPayload, unknown, typeof pdfJobName>(
+  pdfQueueName,
+  {
+    connection: {
+      url: env.REDIS_URL,
+    },
+  },
+);

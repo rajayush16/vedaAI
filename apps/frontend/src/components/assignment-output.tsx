@@ -4,9 +4,12 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import {
   createJobSocket,
+  downloadPdfExport,
   fetchAssignmentDetail,
   regenerateAssignment,
+  requestPdfExport,
   type AssignmentDetailPayload,
+  type JobUpdatePayload,
 } from "../lib/api";
 import { useAppStore } from "../store/app-store";
 
@@ -23,7 +26,9 @@ export function AssignmentOutput() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [regenerating, setRegenerating] = useState(false);
-  const [downloading, setDownloading] = useState(false);
+  const [pdfJobId, setPdfJobId] = useState<string | null>(null);
+  const [pdfStatus, setPdfStatus] = useState<"idle" | "queued" | "processing" | "completed" | "failed">("idle");
+  const [pdfMessage, setPdfMessage] = useState("");
   const activeJob = useAppStore((state) => state.activeJobs[assignmentId]);
   const setActiveJob = useAppStore((state) => state.setActiveJob);
 
@@ -64,28 +69,51 @@ export function AssignmentOutput() {
     socket.onmessage = (event) => {
       const message = JSON.parse(event.data) as {
         type: "job-update";
-        payload: {
-          jobId: string;
-          assignmentId: string;
-          status: "queued" | "processing" | "completed" | "failed";
-          message?: string;
-        };
+        payload: JobUpdatePayload;
       };
 
       if (message.type === "job-update" && message.payload.assignmentId === assignmentId) {
-        setActiveJob(assignmentId, {
-          jobId: message.payload.jobId,
-          status: message.payload.status,
-          message: message.payload.message,
-        });
+        if (message.payload.jobKind === "generation") {
+          setActiveJob(assignmentId, {
+            jobId: message.payload.jobId,
+            status: message.payload.status,
+            message: message.payload.message,
+          });
 
-        if (message.payload.status === "completed") {
-          fetchAssignmentDetail(assignmentId)
-            .then((response) => {
-              setDetail(response);
-              setError("");
-            })
-            .catch(() => undefined);
+          if (message.payload.status === "completed") {
+            fetchAssignmentDetail(assignmentId)
+              .then((response) => {
+                setDetail(response);
+                setError("");
+              })
+              .catch(() => undefined);
+          }
+        }
+
+        if (message.payload.jobKind === "pdf" && (!pdfJobId || message.payload.jobId === pdfJobId)) {
+          setPdfJobId(message.payload.jobId);
+          setPdfStatus(message.payload.status);
+          setPdfMessage(message.payload.message ?? "");
+
+          if (message.payload.status === "completed") {
+            downloadPdfExport(assignmentId, message.payload.jobId)
+              .then(({ blob, fileName }) => {
+                const url = URL.createObjectURL(blob);
+                const anchor = document.createElement("a");
+                anchor.href = url;
+                anchor.download = fileName;
+                anchor.click();
+                URL.revokeObjectURL(url);
+              })
+              .catch((downloadError) => {
+                setPdfStatus("failed");
+                setPdfMessage(
+                  downloadError instanceof Error
+                    ? downloadError.message
+                    : "Failed to download PDF",
+                );
+              });
+          }
         }
       }
     };
@@ -94,7 +122,7 @@ export function AssignmentOutput() {
       active = false;
       socket.close();
     };
-  }, [assignmentId, setActiveJob]);
+  }, [assignmentId, pdfJobId, setActiveJob]);
 
   if (loading) {
     return <div className="loading-panel">Loading generated output...</div>;
@@ -116,11 +144,16 @@ export function AssignmentOutput() {
       return;
     }
 
-    setDownloading(true);
+    setPdfStatus("queued");
+    setPdfMessage("PDF export queued");
     try {
-      window.print();
-    } finally {
-      setDownloading(false);
+      const response = await requestPdfExport(assignmentId);
+      setPdfJobId(response.jobId);
+    } catch (downloadError) {
+      setPdfStatus("failed");
+      setPdfMessage(
+        downloadError instanceof Error ? downloadError.message : "Failed to queue PDF export",
+      );
     }
   }
 
@@ -139,9 +172,11 @@ export function AssignmentOutput() {
             className="secondary-button"
             type="button"
             onClick={handleDownload}
-            disabled={!latestPaper || downloading}
+            disabled={!latestPaper || pdfStatus === "queued" || pdfStatus === "processing"}
           >
-            {downloading ? "Opening print..." : "Download as PDF"}
+            {pdfStatus === "queued" || pdfStatus === "processing"
+              ? "Preparing PDF..."
+              : "Download as PDF"}
           </button>
           <button
             className="primary-button"
@@ -176,6 +211,11 @@ export function AssignmentOutput() {
         </div>
       ) : (
         <article className="paper-card">
+          {pdfMessage ? (
+            <div className="paper-export-status">
+              <p>{pdfMessage}</p>
+            </div>
+          ) : null}
           <header className="paper-header">
             <h2>{latestPaper.schoolName}</h2>
             <p>Subject: {latestPaper.subject}</p>

@@ -4,6 +4,7 @@ import { GenerationJobModel } from "../models/GenerationJob";
 import { GeneratedPaperModel } from "../models/GeneratedPaper";
 import { generationJobName, generationQueue } from "../lib/queue";
 import { realtimeGateway } from "../lib/realtime";
+import { setJobState } from "../lib/job-state";
 
 export async function createAssignmentWithJob(input: unknown, teacherId: string) {
   const parsed = assignmentInputSchema.parse(input);
@@ -35,9 +36,18 @@ export async function createAssignmentWithJob(input: unknown, teacherId: string)
     payload: {
       jobId: String(generationJob._id),
       assignmentId: String(assignment._id),
+      jobKind: "generation",
       status: "queued",
       message: "Assignment queued for generation",
     },
+  });
+
+  await setJobState({
+    assignmentId: String(assignment._id),
+    jobId: String(generationJob._id),
+    jobKind: "generation",
+    status: "queued",
+    message: "Assignment queued for generation",
   });
 
   return {
@@ -98,9 +108,18 @@ export async function updateAssignmentWithJob(
     payload: {
       jobId: String(generationJob._id),
       assignmentId: String(assignment._id),
+      jobKind: "generation",
       status: "queued",
       message: "Assignment update queued for regeneration",
     },
+  });
+
+  await setJobState({
+    assignmentId: String(assignment._id),
+    jobId: String(generationJob._id),
+    jobKind: "generation",
+    status: "queued",
+    message: "Assignment update queued for regeneration",
   });
 
   return {

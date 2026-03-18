@@ -655,6 +655,18 @@ button {
   box-shadow: 0 26px 45px rgba(130, 123, 120, 0.12);
 }
 
+.paper-export-status {
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(31, 31, 31, 0.05);
+  color: var(--muted);
+}
+
+.paper-export-status p {
+  margin: 0;
+}
+
 .paper-header,
 .paper-section h3 {
   text-align: center;

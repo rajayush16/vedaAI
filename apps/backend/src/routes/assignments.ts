@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import { Router } from "express";
 import multer from "multer";
 import {
@@ -8,6 +9,10 @@ import {
   updateAssignmentWithJob,
 } from "../services/assignment-service";
 import { requireTeacherSession } from "../middleware/auth";
+import { getCachedPdfDocument } from "../lib/pdf-cache";
+import { getJobState, setJobState } from "../lib/job-state";
+import { pdfJobName, pdfQueue } from "../lib/queue";
+import { realtimeGateway } from "../lib/realtime";
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -101,6 +106,91 @@ assignmentsRouter.post("/:id/regenerate", async (request, response) => {
 
   const created = await createAssignmentWithJob(assignment.assignment, request.teacher!.id);
   response.status(202).json(created);
+});
+
+assignmentsRouter.post("/:id/export-pdf", async (request, response) => {
+  const assignmentId = Array.isArray(request.params.id)
+    ? request.params.id[0]
+    : request.params.id;
+  const assignment = await getAssignmentWithOutput(assignmentId, request.teacher!.id);
+
+  if (!assignment?.latestPaper) {
+    response.status(409).json({ message: "Question paper is not ready for PDF export" });
+    return;
+  }
+
+  const pdfJobId = randomUUID();
+
+  await pdfQueue.add(pdfJobName, {
+    assignmentId,
+    pdfJobId,
+  });
+
+  await setJobState({
+    assignmentId,
+    jobId: pdfJobId,
+    jobKind: "pdf",
+    status: "queued",
+    message: "PDF export queued",
+  });
+
+  await realtimeGateway.broadcast({
+    type: "job-update",
+    payload: {
+      jobId: pdfJobId,
+      assignmentId,
+      jobKind: "pdf",
+      status: "queued",
+      message: "PDF export queued",
+    },
+  });
+
+  response.status(202).json({
+    jobId: pdfJobId,
+    status: "queued",
+  });
+});
+
+assignmentsRouter.get("/:id/export-pdf/:jobId", async (request, response) => {
+  const assignmentId = Array.isArray(request.params.id)
+    ? request.params.id[0]
+    : request.params.id;
+  const pdfJobId = Array.isArray(request.params.jobId)
+    ? request.params.jobId[0]
+    : request.params.jobId;
+
+  const assignment = await getAssignmentWithOutput(assignmentId, request.teacher!.id);
+
+  if (!assignment) {
+    response.status(404).json({ message: "Assignment not found" });
+    return;
+  }
+
+  const cachedPdf = await getCachedPdfDocument(pdfJobId);
+
+  if (cachedPdf) {
+    response.setHeader("Content-Type", "application/pdf");
+    response.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${cachedPdf.metadata.fileName}"`,
+    );
+    response.send(cachedPdf.buffer);
+    return;
+  }
+
+  const state = await getJobState("pdf", pdfJobId);
+
+  if (!state) {
+    response.status(404).json({ message: "PDF export not found" });
+    return;
+  }
+
+  if (state.assignmentId !== assignmentId) {
+    response.status(403).json({ message: "Unauthorized" });
+    return;
+  }
+
+  response.status(202).json(state);
 });
 
 assignmentsRouter.delete("/:id", async (request, response) => {

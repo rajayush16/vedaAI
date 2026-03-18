@@ -1,10 +1,11 @@
 import { connectToDatabase } from "./lib/db";
-import { createGenerationWorker } from "./worker-runner";
+import { createGenerationWorker, createPdfWorker } from "./worker-runner";
 
 async function main() {
   await connectToDatabase();
   createGenerationWorker();
-  console.log("Generation worker started");
+  createPdfWorker();
+  console.log("Generation and PDF workers started");
 }
 
 main().catch((error) => {

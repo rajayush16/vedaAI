@@ -6,8 +6,11 @@ type JobEventPayload = {
   payload: {
     jobId: string;
     assignmentId: string;
+    jobKind: "generation" | "pdf";
     status: "queued" | "processing" | "completed" | "failed";
     message?: string;
+    downloadPath?: string;
+    fileName?: string;
   };
 };
 
