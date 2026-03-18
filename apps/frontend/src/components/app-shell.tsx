@@ -28,16 +28,45 @@ export function DashboardShell({
   const router = useRouter();
   const teacher = useAppStore((state) => state.teacher) ?? demoTeacher;
   const logout = useAppStore((state) => state.logout);
-  const pageContent =
-    pathname === "/assignments/new"
+  const pageContent = pathname === "/assignments/new"
+    ? {
+        title: "Create Assignment",
+        subtitle: "Set up a new assignment for your students",
+      }
+    : pathname.startsWith("/assignments")
       ? {
-          title: "Create Assignment",
-          subtitle: "Set up a new assignment for your students",
-        }
-      : {
           title: "Assignments",
           subtitle: "Manage and create assignments for your classes.",
-        };
+        }
+      : pathname === "/home"
+        ? {
+            title: "Home",
+            subtitle: "Your teacher dashboard overview.",
+          }
+        : pathname === "/groups"
+          ? {
+              title: "My Groups",
+              subtitle: "Manage groups, sections, and student cohorts.",
+            }
+          : pathname === "/toolkit"
+            ? {
+                title: "AI Teacher's Toolkit",
+                subtitle: "Helpful teaching tools, prompts, and workflows.",
+              }
+            : pathname === "/library"
+              ? {
+                  title: "My Library",
+                  subtitle: "Saved resources, papers, and reusable material.",
+                }
+              : pathname === "/settings"
+                ? {
+                    title: "Settings",
+                    subtitle: "Profile, school, and account preferences.",
+                  }
+                : {
+                    title: "Dashboard",
+                    subtitle: "Teacher workspace",
+                  };
 
   return (
     <div className="dashboard-shell">

@@ -7,18 +7,18 @@ export const demoTeacher = {
 };
 
 export const primaryNav = [
-  { label: "Home", href: "/assignments", icon: "grid" },
-  { label: "My Groups", href: "/assignments", icon: "groups" },
+  { label: "Home", href: "/home", icon: "grid" },
+  { label: "My Groups", href: "/groups", icon: "groups" },
   { label: "Assignments", href: "/assignments", icon: "file" },
-  { label: "AI Teacher's Toolkit", href: "/assignments", icon: "sparkles" },
-  { label: "My Library", href: "/assignments", icon: "library" },
+  { label: "AI Teacher's Toolkit", href: "/toolkit", icon: "sparkles" },
+  { label: "My Library", href: "/library", icon: "library" },
 ] as const;
 
 export const mobileNav = [
-  { label: "Home", href: "/assignments", icon: "grid" },
-  { label: "My Groups", href: "/assignments", icon: "groups" },
-  { label: "Library", href: "/assignments", icon: "library" },
-  { label: "AI Toolkit", href: "/assignments", icon: "sparkles" },
+  { label: "Home", href: "/home", icon: "grid" },
+  { label: "My Groups", href: "/groups", icon: "groups" },
+  { label: "Library", href: "/library", icon: "library" },
+  { label: "AI Toolkit", href: "/toolkit", icon: "sparkles" },
 ] as const;
 
 export const seededAssignments = [

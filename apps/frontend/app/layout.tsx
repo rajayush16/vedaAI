@@ -1,5 +1,11 @@
 import type { Metadata } from "next";
+import { Manrope } from "next/font/google";
 import "./globals.css";
+
+const manrope = Manrope({
+  subsets: ["latin"],
+  variable: "--font-ui",
+});
 
 export const metadata: Metadata = {
   title: "VedaAI Assignment Creator",
@@ -12,7 +18,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={manrope.variable}>
       <body>{children}</body>
     </html>
   );

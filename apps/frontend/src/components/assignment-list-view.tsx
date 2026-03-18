@@ -10,21 +10,15 @@ export function AssignmentListView() {
   const router = useRouter();
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
-  const [showSeedHint, setShowSeedHint] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const assignments = useAppStore((state) => state.assignments);
   const search = useAppStore((state) => state.search);
-  const seedAssignments = useAppStore((state) => state.seedAssignments);
   const setSearch = useAppStore((state) => state.setSearch);
   const setAssignments = useAppStore((state) => state.setAssignments);
   const logout = useAppStore((state) => state.logout);
-
-  useEffect(() => {
-    setShowSeedHint(assignments.length === 0);
-  }, [assignments.length]);
 
   useEffect(() => {
     function handleOutsideClick(event: MouseEvent) {
@@ -129,9 +123,30 @@ export function AssignmentListView() {
 
   if (assignments.length === 0) {
     return (
-      <div className="empty-state">
-        <div className="empty-illustration">
-          <span>x</span>
+      <div className="assignment-empty-state">
+        <div className="assignment-empty-illustration" aria-hidden="true">
+          <div className="empty-orb" />
+          <div className="empty-paper">
+            <span className="empty-paper-line strong" />
+            <span className="empty-paper-line" />
+            <span className="empty-paper-line" />
+            <span className="empty-paper-line" />
+            <span className="empty-paper-line short" />
+          </div>
+          <div className="empty-magnifier">
+            <div className="empty-magnifier-lens">
+              <span />
+              <span />
+            </div>
+            <div className="empty-magnifier-handle" />
+          </div>
+          <div className="empty-chip top">
+            <span />
+            <span />
+          </div>
+          <div className="empty-spark star" />
+          <div className="empty-spark dot" />
+          <div className="empty-swoosh" />
         </div>
         <h2>No assignments yet</h2>
         <p>
@@ -139,16 +154,9 @@ export function AssignmentListView() {
           submissions. You can set up rubrics, define marking criteria, and let AI
           assist with grading.
         </p>
-        <div className="stack-inline">
-          <Link href="/assignments/new" className="primary-button">
-            + Create Your First Assignment
-          </Link>
-          {showSeedHint ? (
-            <button className="secondary-button" type="button" onClick={seedAssignments}>
-              Load sample cards
-            </button>
-          ) : null}
-        </div>
+        <Link href="/assignments/new" className="primary-button">
+          + Create Your First Assignment
+        </Link>
       </div>
     );
   }
@@ -198,12 +206,14 @@ export function AssignmentListView() {
                 {openMenuId === assignment.id ? (
                   <div className="assignment-menu-popover">
                     <button
+                      className="assignment-menu-action"
                       type="button"
-                      onClick={() => router.push(`/assignments/${assignment.id}/edit`)}
+                      onClick={() => router.push(`/assignments/${assignment.id}`)}
                     >
-                      Edit assignment
+                      View assignment
                     </button>
                     <button
+                      className="assignment-menu-action assignment-menu-delete"
                       type="button"
                       onClick={() => handleDelete(assignment.id)}
                       disabled={deletingId === assignment.id}
