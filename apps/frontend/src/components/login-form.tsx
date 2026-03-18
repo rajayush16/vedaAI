@@ -4,22 +4,39 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AppIcon } from "./icons";
 import { useAppStore } from "../store/app-store";
+import { loginTeacher } from "../lib/api";
 
 export function LoginForm() {
   const router = useRouter();
-  const login = useAppStore((state) => state.login);
+  const setTeacher = useAppStore((state) => state.setTeacher);
   const [email, setEmail] = useState("teacher@vedaai.dev");
   const [password, setPassword] = useState("Teacher123!");
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (!email || !password) {
       return;
     }
 
-    login();
-    router.push("/assignments");
+    setIsSubmitting(true);
+    setError("");
+
+    try {
+      const response = await loginTeacher(email, password);
+      setTeacher(response.teacher);
+      router.push("/assignments");
+    } catch (submissionError) {
+      setError(
+        submissionError instanceof Error
+          ? submissionError.message
+          : "Unable to sign in",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -63,10 +80,12 @@ export function LoginForm() {
           </label>
 
           <button className="primary-button auth-button" type="submit">
-            Continue to dashboard
+            {isSubmitting ? "Signing in..." : "Continue to dashboard"}
             <AppIcon name="right" className="button-icon" />
           </button>
         </form>
+
+        {error ? <p className="form-error">{error}</p> : null}
       </section>
     </main>
   );

@@ -1,9 +1,10 @@
-import { env } from "./config";
+import { connectToDatabase } from "./lib/db";
+import { createGenerationWorker } from "./worker-runner";
 
 async function main() {
-  console.log("Worker bootstrap ready");
-  console.log(`Redis: ${env.REDIS_URL}`);
-  console.log(`MongoDB: ${env.MONGODB_URI}`);
+  await connectToDatabase();
+  createGenerationWorker();
+  console.log("Generation worker started");
 }
 
 main().catch((error) => {

@@ -6,6 +6,8 @@ import { ReactNode } from "react";
 import { demoTeacher, mobileNav, primaryNav } from "../data/demo";
 import { useAppStore } from "../store/app-store";
 import { AppIcon } from "./icons";
+import { logoutTeacher } from "../lib/api";
+import { SessionHydrator } from "./session-hydrator";
 
 function isActive(pathname: string, href: string, label: string) {
   if (label === "Assignments") {
@@ -39,6 +41,7 @@ export function DashboardShell({
 
   return (
     <div className="dashboard-shell">
+      <SessionHydrator />
       <aside className="sidebar desktop-only">
         <Link href="/assignments" className="logo">
           <div className="brand-badge">V</div>
@@ -55,12 +58,12 @@ export function DashboardShell({
             <Link
               key={item.label}
               href={item.href}
-              className={`nav-item ${isActive(pathname, item.href, item.label) ? "active" : ""}`}
-            >
+            className={`nav-item ${isActive(pathname, item.href, item.label) ? "active" : ""}`}
+          >
               <AppIcon name={item.icon} className="nav-icon" />
               <span>{item.label}</span>
               {item.label === "Assignments" ? (
-                <span className="count-badge">10</span>
+                <span className="count-badge">AI</span>
               ) : null}
             </Link>
           ))}
@@ -82,7 +85,8 @@ export function DashboardShell({
           <button
             className="ghost-inline-button"
             type="button"
-            onClick={() => {
+            onClick={async () => {
+              await logoutTeacher().catch(() => undefined);
               logout();
               router.push("/login");
             }}

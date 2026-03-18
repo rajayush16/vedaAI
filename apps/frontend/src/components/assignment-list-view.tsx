@@ -2,18 +2,61 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { fetchAssignments } from "../lib/api";
 import { useAppStore } from "../store/app-store";
 
 export function AssignmentListView() {
   const [showSeedHint, setShowSeedHint] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const assignments = useAppStore((state) => state.assignments);
   const search = useAppStore((state) => state.search);
   const seedAssignments = useAppStore((state) => state.seedAssignments);
   const setSearch = useAppStore((state) => state.setSearch);
+  const setAssignments = useAppStore((state) => state.setAssignments);
 
   useEffect(() => {
     setShowSeedHint(assignments.length === 0);
   }, [assignments.length]);
+
+  useEffect(() => {
+    let active = true;
+
+    fetchAssignments()
+      .then((response) => {
+        if (active) {
+          setAssignments(
+            response.assignments.map((assignment) => ({
+              id: assignment._id,
+              title: assignment.title,
+              assignedOn: new Intl.DateTimeFormat("en-GB")
+                .format(new Date(assignment.createdAt))
+                .replace(/\//g, "-"),
+              dueDate: assignment.dueDate,
+            })),
+          );
+          setError("");
+        }
+      })
+      .catch((requestError) => {
+        if (active) {
+          setError(
+            requestError instanceof Error
+              ? requestError.message
+              : "Unable to load assignments",
+          );
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [setAssignments]);
 
   const filteredAssignments = useMemo(() => {
     if (!search.trim()) {
@@ -24,6 +67,14 @@ export function AssignmentListView() {
       assignment.title.toLowerCase().includes(search.toLowerCase()),
     );
   }, [assignments, search]);
+
+  if (loading) {
+    return <div className="loading-panel">Loading assignments...</div>;
+  }
+
+  if (error) {
+    return <div className="error-stack"><p>{error}</p></div>;
+  }
 
   if (assignments.length === 0) {
     return (

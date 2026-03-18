@@ -1,41 +1,34 @@
 import http from "http";
-import express from "express";
-import cors from "cors";
-import cookieParser from "cookie-parser";
 import { WebSocketServer } from "ws";
 import { env } from "./config";
+import { createApp } from "./app";
+import { connectToDatabase } from "./lib/db";
+import { realtimeGateway } from "./lib/realtime";
 
-const app = express();
+async function main() {
+  await connectToDatabase();
 
-app.use(
-  cors({
-    origin: env.FRONTEND_URL,
-    credentials: true,
-  }),
-);
-app.use(express.json({ limit: "10mb" }));
-app.use(cookieParser(env.SESSION_SECRET));
+  const app = createApp();
+  const server = http.createServer(app);
+  const wss = new WebSocketServer({ server, path: "/ws" });
 
-app.get("/api/health", (_req, res) => {
-  res.json({
-    ok: true,
-    service: "backend",
-    websocket: true,
+  realtimeGateway.attach(wss);
+
+  wss.on("connection", (socket) => {
+    socket.send(
+      JSON.stringify({
+        type: "connected",
+        message: "WebSocket server ready",
+      }),
+    );
   });
-});
 
-const server = http.createServer(app);
-const wss = new WebSocketServer({ server, path: "/ws" });
+  server.listen(env.BACKEND_PORT, () => {
+    console.log(`API server listening on http://localhost:${env.BACKEND_PORT}`);
+  });
+}
 
-wss.on("connection", (socket) => {
-  socket.send(
-    JSON.stringify({
-      type: "connected",
-      message: "WebSocket server ready",
-    }),
-  );
-});
-
-server.listen(env.BACKEND_PORT, () => {
-  console.log(`API server listening on http://localhost:${env.BACKEND_PORT}`);
+main().catch((error) => {
+  console.error("Server failed to start", error);
+  process.exit(1);
 });

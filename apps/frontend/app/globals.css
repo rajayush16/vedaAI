@@ -131,6 +131,11 @@ button {
   line-height: 1.6;
 }
 
+.form-error {
+  margin: 14px 0 0;
+  color: #9d3d1f;
+}
+
 .status-dot {
   width: 14px;
   height: 14px;
@@ -411,6 +416,18 @@ button {
   gap: 18px;
 }
 
+.loading-panel,
+.loading-paper {
+  display: grid;
+  place-items: center;
+  min-height: 320px;
+  padding: 24px;
+  border: 1px dashed rgba(29, 27, 27, 0.14);
+  border-radius: 28px;
+  text-align: center;
+  color: var(--muted);
+}
+
 .assignment-form-screen {
   display: grid;
   gap: 18px;
@@ -598,6 +615,123 @@ button {
   margin: 0;
 }
 
+.output-screen {
+  display: grid;
+  gap: 18px;
+}
+
+.output-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px;
+  border-radius: 28px;
+  background: #262323;
+  color: #fff;
+}
+
+.output-toolbar h2,
+.paper-header h2,
+.paper-section h3 {
+  margin: 0;
+}
+
+.output-toolbar p {
+  margin: 10px 0 0;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.paper-card {
+  padding: 32px 36px;
+  border-radius: 34px;
+  background: #fff;
+  box-shadow: 0 26px 45px rgba(130, 123, 120, 0.12);
+}
+
+.paper-header,
+.paper-section h3 {
+  text-align: center;
+}
+
+.paper-header p {
+  margin: 6px 0 0;
+  font-size: 1.2rem;
+}
+
+.paper-meta-grid,
+.student-info {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.paper-meta-grid {
+  margin-top: 28px;
+  font-weight: 600;
+}
+
+.paper-note {
+  margin: 28px 0;
+}
+
+.student-info {
+  margin-bottom: 28px;
+}
+
+.paper-section {
+  margin-top: 28px;
+}
+
+.section-instruction {
+  margin: 10px 0 18px;
+  font-style: italic;
+  color: var(--muted);
+  text-align: center;
+}
+
+.question-list,
+.answer-list {
+  display: grid;
+  gap: 12px;
+  padding-left: 20px;
+}
+
+.question-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  line-height: 1.65;
+}
+
+.difficulty-badge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.difficulty-badge.easy {
+  background: rgba(103, 202, 128, 0.18);
+  color: #27653a;
+}
+
+.difficulty-badge.moderate {
+  background: rgba(255, 180, 84, 0.2);
+  color: #8a5a09;
+}
+
+.difficulty-badge.hard {
+  background: rgba(255, 122, 77, 0.18);
+  color: #9d3d1f;
+}
+
+.answer-key {
+  border-top: 1px solid var(--line);
+  padding-top: 22px;
+}
+
 .filters-row {
   display: grid;
   grid-template-columns: 180px 1fr;
@@ -747,6 +881,20 @@ button {
 
   .totals-panel {
     justify-items: start;
+  }
+
+  .output-toolbar,
+  .paper-meta-grid,
+  .student-info {
+    grid-template-columns: 1fr;
+  }
+
+  .output-toolbar {
+    display: grid;
+  }
+
+  .paper-card {
+    padding: 26px 18px;
   }
 
   .assignment-meta {

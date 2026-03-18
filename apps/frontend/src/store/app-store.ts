@@ -37,16 +37,33 @@ type AppState = {
   assignments: AssignmentCard[];
   search: string;
   draft: AssignmentDraft;
+  activeJobs: Record<
+    string,
+    {
+      jobId: string;
+      status: "queued" | "processing" | "completed" | "failed";
+      message?: string;
+    }
+  >;
   login: () => void;
   logout: () => void;
   seedAssignments: () => void;
   setSearch: (search: string) => void;
+  setTeacher: (teacher: TeacherSession | null) => void;
+  setAssignments: (assignments: AssignmentCard[]) => void;
+  setActiveJob: (
+    assignmentId: string,
+    job: {
+      jobId: string;
+      status: "queued" | "processing" | "completed" | "failed";
+      message?: string;
+    },
+  ) => void;
   updateDraft: (patch: Partial<AssignmentDraft>) => void;
   addQuestionType: () => void;
   updateQuestionType: (id: string, patch: Partial<QuestionTypeDraft>) => void;
   removeQuestionType: (id: string) => void;
   resetDraft: () => void;
-  createAssignmentFromDraft: () => string;
 };
 
 function setSessionCookie() {
@@ -104,6 +121,7 @@ export const useAppStore = create<AppState>()(
       assignments: [],
       search: "",
       draft: createEmptyDraft(),
+      activeJobs: {},
       login: () => {
         setSessionCookie();
         set({
@@ -117,6 +135,7 @@ export const useAppStore = create<AppState>()(
           assignments: [],
           search: "",
           draft: createEmptyDraft(),
+          activeJobs: {},
         });
       },
       seedAssignments: () => {
@@ -126,6 +145,20 @@ export const useAppStore = create<AppState>()(
       },
       setSearch: (search) => {
         set({ search });
+      },
+      setTeacher: (teacher) => {
+        set({ teacher });
+      },
+      setAssignments: (assignments) => {
+        set({ assignments });
+      },
+      setActiveJob: (assignmentId, job) => {
+        set((state) => ({
+          activeJobs: {
+            ...state.activeJobs,
+            [assignmentId]: job,
+          },
+        }));
       },
       updateDraft: (patch) => {
         set((state) => ({
@@ -172,30 +205,12 @@ export const useAppStore = create<AppState>()(
           draft: createEmptyDraft(),
         });
       },
-      createAssignmentFromDraft: () => {
-        const id = `assignment-${crypto.randomUUID()}`;
-
-        set((state) => ({
-          assignments: [
-            {
-              id,
-              title: state.draft.title,
-              assignedOn: formatToday(),
-              dueDate: state.draft.dueDate,
-            },
-            ...state.assignments,
-          ],
-        }));
-
-        return id;
-      },
     }),
     {
       name: "vedaai-app",
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         teacher: state.teacher,
-        assignments: state.assignments,
         draft: state.draft,
       }),
     },

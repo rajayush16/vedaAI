@@ -10,6 +10,7 @@ const envSchema = z.object({
   MONGODB_URI: z.string().default("mongodb://localhost:27017/vedaai"),
   REDIS_URL: z.string().default("redis://localhost:6379"),
   SESSION_SECRET: z.string().default("change-me"),
+  OPENAI_MODEL: z.string().default("gpt-4.1-mini"),
   OPENAI_API_KEY: z.string().optional(),
   DEMO_TEACHER_EMAIL: z.string().email().default("teacher@vedaai.dev"),
   DEMO_TEACHER_PASSWORD: z.string().min(8).default("Teacher123!"),

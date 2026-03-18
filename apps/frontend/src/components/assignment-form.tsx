@@ -3,6 +3,7 @@
 import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAppStore } from "../store/app-store";
+import { createAssignment } from "../lib/api";
 
 const questionTypeOptions = [
   "Multiple Choice Questions",
@@ -20,8 +21,11 @@ export function AssignmentForm() {
   const addQuestionType = useAppStore((state) => state.addQuestionType);
   const updateQuestionType = useAppStore((state) => state.updateQuestionType);
   const removeQuestionType = useAppStore((state) => state.removeQuestionType);
-  const createAssignmentFromDraft = useAppStore((state) => state.createAssignmentFromDraft);
+  const resetDraft = useAppStore((state) => state.resetDraft);
+  const setActiveJob = useAppStore((state) => state.setActiveJob);
   const [errors, setErrors] = useState<string[]>([]);
+  const [materialFile, setMaterialFile] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const totalQuestions = useMemo(
     () => draft.questionTypes.reduce((sum, item) => sum + item.count, 0),
@@ -52,15 +56,49 @@ export function AssignmentForm() {
     return nextErrors.length === 0;
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (!validate()) {
       return;
     }
 
-    createAssignmentFromDraft();
-    router.push("/assignments");
+    setIsSubmitting(true);
+
+    try {
+      const payload = new FormData();
+      payload.set("title", draft.title);
+      payload.set("subject", draft.subject);
+      payload.set("className", draft.className);
+      payload.set("schoolName", draft.schoolName);
+      payload.set("durationMinutes", String(draft.durationMinutes));
+      payload.set("dueDate", draft.dueDate);
+      payload.set("instructions", draft.instructions);
+      payload.set("questionTypes", JSON.stringify(draft.questionTypes));
+      payload.set("materialText", draft.materialText ?? "");
+      payload.set("materialFileName", draft.materialFileName ?? "");
+
+      if (materialFile) {
+        payload.set("material", materialFile);
+      }
+
+      const response = await createAssignment(payload);
+      setActiveJob(response.assignmentId, {
+        jobId: response.jobId,
+        status: "queued",
+        message: "Assignment queued for generation",
+      });
+      resetDraft();
+      router.push(`/assignments/${response.assignmentId}`);
+    } catch (submissionError) {
+      setErrors([
+        submissionError instanceof Error
+          ? submissionError.message
+          : "Failed to create assignment",
+      ]);
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -85,6 +123,7 @@ export function AssignmentForm() {
             className="hidden-input"
             onChange={(event) => {
               const file = event.target.files?.[0];
+              setMaterialFile(file ?? null);
               updateDraft({ materialFileName: file?.name ?? "" });
             }}
           />
@@ -257,7 +296,7 @@ export function AssignmentForm() {
           ← Previous
         </button>
         <button className="primary-button" type="submit">
-          Next →
+          {isSubmitting ? "Submitting..." : "Next →"}
         </button>
       </div>
     </form>
