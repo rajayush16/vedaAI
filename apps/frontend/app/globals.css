@@ -219,7 +219,7 @@ button {
 .dashboard-shell {
   display: flex;
   gap: 10px;
-  padding: 8px;
+  padding: 12px;
 }
 
 .sidebar,
@@ -234,7 +234,8 @@ button {
 
 .sidebar {
   width: 304px;
-  min-height: 756px;
+  min-width: 304px;
+  min-height: calc(100vh - 24px);
   padding: 24px;
   border-radius: 16px;
   border: 0;
@@ -245,6 +246,10 @@ button {
   display: flex;
   flex-direction: column;
   gap: 22px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 12px;
+  align-self: flex-start;
 }
 
 .logo {
@@ -294,14 +299,30 @@ button {
   gap: 14px;
 }
 
-.school-card,
-.teacher-pill {
+.school-card {
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 14px;
   border-radius: 18px;
   background: rgba(31, 31, 31, 0.05);
+}
+
+.teacher-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px 4px 4px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--ink);
+  font-size: 0.94rem;
+  font-weight: 500;
+}
+
+.teacher-pill svg {
+  color: #a4a0a0;
+  margin-left: 2px;
 }
 
 .school-card,
@@ -347,10 +368,11 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  min-height: 58px;
-  padding: 0 18px;
-  border-radius: 20px;
+  gap: 10px;
+  height: 56px;
+  min-height: 56px;
+  padding: 0 12px 0 24px;
+  border-radius: 16px;
 }
 
 .topbar-breadcrumb,
@@ -362,13 +384,15 @@ button {
 
 .crumb-label {
   margin: 0;
-  color: var(--muted);
-  font-size: 0.92rem;
+  color: #a4a0a0;
+  font-size: 0.96rem;
+  font-weight: 500;
 }
 
 .topbar-breadcrumb h1 {
-  margin: 4px 0 0;
+  margin: 0;
   font-size: 1rem;
+  display: none;
 }
 
 .icon-button {
@@ -377,20 +401,42 @@ button {
   height: 36px;
   place-items: center;
   border-radius: 50%;
-  border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.8);
+  border: none;
+  background: #ffffff;
+}
+
+.notification-bell {
+  position: relative;
+}
+
+.notif-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ff5e3a;
+  border: 1.5px solid #ffffff;
+}
+
+.crumb-icon {
+  color: #a4a0a0;
+  width: 20px;
+  height: 20px;
 }
 
 .page-panel {
-  min-height: calc(100vh - 130px);
+  flex: 1;
+  min-height: calc(100vh - 100px);
   padding: 22px 22px 28px;
-  border-radius: 30px;
-  background:
-    radial-gradient(circle at 50% 6%, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.78) 22%, rgba(237, 234, 231, 0.72) 100%);
+  border-radius: 48px;
+  background: rgba(255, 255, 255, 0.75);
 }
 
 .heading-in-panel {
   margin-bottom: 12px;
+  display: none;
 }
 
 .empty-state,

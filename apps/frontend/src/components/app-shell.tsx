@@ -87,8 +87,8 @@ export function DashboardShell({
             <Link
               key={item.label}
               href={item.href}
-            className={`nav-item ${isActive(pathname, item.href, item.label) ? "active" : ""}`}
-          >
+              className={`nav-item ${isActive(pathname, item.href, item.label) ? "active" : ""}`}
+            >
               <AppIcon name={item.icon} className="nav-icon" />
               <span>{item.label}</span>
               {item.label === "Assignments" ? (
@@ -136,16 +136,15 @@ export function DashboardShell({
             <button className="icon-button" type="button" onClick={() => router.back()}>
               <AppIcon name="left" className="nav-icon" />
             </button>
-            <div>
-              <p className="crumb-label">Assignment</p>
-              <h1>{pageContent.title}</h1>
-            </div>
+            <AppIcon name="grid" className="crumb-icon" />
+            <p className="crumb-label">Assignment</p>
           </div>
 
           <div className="topbar-actions">
             {actions}
-            <button className="icon-button" type="button">
+            <button className="icon-button notification-bell" type="button">
               <AppIcon name="bell" className="nav-icon" />
+              <div className="notif-dot" />
             </button>
             <button
               className="teacher-pill"
@@ -155,6 +154,7 @@ export function DashboardShell({
             >
               <div className="avatar-circle small">{teacher.avatarInitials}</div>
               <span>{teacher.name}</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
             </button>
           </div>
         </header>
@@ -165,14 +165,6 @@ export function DashboardShell({
         </div>
 
         <section className="page-panel">
-          <div className="page-heading desktop-only heading-in-panel">
-            <p className="status-dot" />
-            <div>
-              <p className="page-title">{pageContent.title}</p>
-              <p className="page-subtitle">{pageContent.subtitle}</p>
-            </div>
-          </div>
-
           {children}
         </section>
       </div>
