@@ -1,5 +1,5 @@
 import type { WebSocketServer } from "ws";
-import { redis } from "./redis";
+import { createRedisClient, redis } from "./redis";
 
 type JobEventPayload = {
   type: "job-update";
@@ -18,7 +18,10 @@ const realtimeChannel = "vedaai:realtime";
 
 class RealtimeGateway {
   private wss: WebSocketServer | null = null;
-  private subscriber = redis.duplicate();
+  private subscriber = createRedisClient({
+    enableReadyCheck: false,
+    lazyConnect: true,
+  });
   private subscribed = false;
 
   async attach(wss: WebSocketServer) {

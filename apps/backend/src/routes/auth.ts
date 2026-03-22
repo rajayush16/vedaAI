@@ -4,6 +4,15 @@ import { createTeacherSession, destroyTeacherSession, getTeacherSession } from "
 
 export const authRouter = Router();
 
+const isProduction = process.env.NODE_ENV === "production";
+const sessionCookieOptions = {
+  httpOnly: true,
+  signed: true,
+  sameSite: isProduction ? ("none" as const) : ("lax" as const),
+  secure: isProduction,
+  maxAge: 1000 * 60 * 60 * 24 * 7,
+};
+
 authRouter.post("/login", async (request, response) => {
   const { email, password } = request.body as {
     email?: string;
@@ -17,13 +26,7 @@ authRouter.post("/login", async (request, response) => {
 
   const session = await createTeacherSession();
 
-  response.cookie("vedaai_demo_session", session.sessionId, {
-    httpOnly: true,
-    signed: true,
-    sameSite: "lax",
-    secure: false,
-    maxAge: 1000 * 60 * 60 * 24 * 7,
-  });
+  response.cookie("vedaai_demo_session", session.sessionId, sessionCookieOptions);
 
   response.json({
     teacher: session.teacher,
@@ -57,6 +60,6 @@ authRouter.post("/logout", async (request, response) => {
     await destroyTeacherSession(sessionId);
   }
 
-  response.clearCookie("vedaai_demo_session");
+  response.clearCookie("vedaai_demo_session", sessionCookieOptions);
   response.status(204).send();
 });

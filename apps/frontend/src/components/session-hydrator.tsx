@@ -8,9 +8,12 @@ import { useAppStore } from "../store/app-store";
 export function SessionHydrator() {
   const router = useRouter();
   const setTeacher = useAppStore((state) => state.setTeacher);
+  const setAuthStatus = useAppStore((state) => state.setAuthStatus);
 
   useEffect(() => {
     let active = true;
+
+    setAuthStatus("unknown");
 
     getTeacherSession()
       .then((response) => {
@@ -28,7 +31,7 @@ export function SessionHydrator() {
     return () => {
       active = false;
     };
-  }, [router, setTeacher]);
+  }, [router, setAuthStatus, setTeacher]);
 
   return null;
 }

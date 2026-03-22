@@ -7,9 +7,10 @@ import {
 } from "@vedaai/shared";
 import { env } from "../config";
 
-const client = env.OPENAI_API_KEY
+const client = env.GEMINI_API_KEY
   ? new OpenAI({
-      apiKey: env.OPENAI_API_KEY,
+      apiKey: env.GEMINI_API_KEY,
+      baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
     })
   : null;
 
@@ -240,6 +241,37 @@ function normalizeGeneratedPaper(
   });
 }
 
+function extractJsonPayload(text: string) {
+  const trimmed = text.trim();
+
+  if (!trimmed) {
+    throw new SyntaxError("Model returned an empty response");
+  }
+
+  const withoutFence = trimmed
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/i, "")
+    .trim();
+
+  try {
+    return JSON.parse(withoutFence);
+  } catch {
+    const objectStart = withoutFence.indexOf("{");
+    const arrayStart = withoutFence.indexOf("[");
+    const startCandidates = [objectStart, arrayStart].filter((index) => index >= 0);
+    const start = startCandidates.length ? Math.min(...startCandidates) : -1;
+    const objectEnd = withoutFence.lastIndexOf("}");
+    const arrayEnd = withoutFence.lastIndexOf("]");
+    const end = Math.max(objectEnd, arrayEnd);
+
+    if (start >= 0 && end > start) {
+      return JSON.parse(withoutFence.slice(start, end + 1));
+    }
+
+    throw new SyntaxError("Model response did not contain valid JSON");
+  }
+}
+
 export async function generateStructuredPaper(rawInput: AssignmentInput) {
   const input = assignmentInputSchema.parse(rawInput);
 
@@ -248,16 +280,21 @@ export async function generateStructuredPaper(rawInput: AssignmentInput) {
   }
 
   try {
-    const response = await client.responses.create({
-      model: env.OPENAI_MODEL,
-      input: buildPrompt(input),
+    const response = await client.chat.completions.create({
+      model: env.GEMINI_MODEL,
+      messages: [
+        {
+          role: "user",
+          content: buildPrompt(input),
+        },
+      ],
     });
 
-    const text = response.output_text;
-    const parsed = JSON.parse(text);
+    const text = response.choices[0]?.message?.content ?? "";
+    const parsed = extractJsonPayload(text);
     return normalizeGeneratedPaper(parsed, input);
   } catch (error) {
-    console.error("OpenAI generation failed, falling back to deterministic paper", error);
+    console.error("Gemini generation failed, falling back to deterministic paper", error);
     return buildFallbackPaper(input);
   }
 }

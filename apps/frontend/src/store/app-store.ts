@@ -32,6 +32,7 @@ type TeacherSession = {
 };
 
 type AppState = {
+  authStatus: "unknown" | "authenticated" | "unauthenticated";
   teacher: TeacherSession | null;
   assignments: AssignmentCard[];
   search: string;
@@ -48,6 +49,7 @@ type AppState = {
   logout: () => void;
   seedAssignments: () => void;
   setSearch: (search: string) => void;
+  setAuthStatus: (status: "unknown" | "authenticated" | "unauthenticated") => void;
   setTeacher: (teacher: TeacherSession | null) => void;
   setAssignments: (assignments: AssignmentCard[]) => void;
   setActiveJob: (
@@ -108,6 +110,7 @@ function formatToday() {
 export const useAppStore = create<AppState>()(
   persist(
     (set) => ({
+      authStatus: "unknown",
       teacher: null,
       assignments: [],
       search: "",
@@ -115,11 +118,13 @@ export const useAppStore = create<AppState>()(
       activeJobs: {},
       login: () => {
         set({
+          authStatus: "authenticated",
           teacher: demoTeacher,
         });
       },
       logout: () => {
         set({
+          authStatus: "unauthenticated",
           teacher: null,
           assignments: [],
           search: "",
@@ -135,8 +140,14 @@ export const useAppStore = create<AppState>()(
       setSearch: (search) => {
         set({ search });
       },
+      setAuthStatus: (authStatus) => {
+        set({ authStatus });
+      },
       setTeacher: (teacher) => {
-        set({ teacher });
+        set({
+          authStatus: teacher ? "authenticated" : "unauthenticated",
+          teacher,
+        });
       },
       setAssignments: (assignments) => {
         set({ assignments });
@@ -199,6 +210,7 @@ export const useAppStore = create<AppState>()(
       name: "vedaai-app",
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
+        authStatus: state.authStatus,
         teacher: state.teacher,
         draft: state.draft,
       }),

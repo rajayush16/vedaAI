@@ -26,6 +26,7 @@ export function DashboardShell({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const authStatus = useAppStore((state) => state.authStatus);
   const teacher = useAppStore((state) => state.teacher) ?? demoTeacher;
   const logout = useAppStore((state) => state.logout);
   const pageContent = pathname === "/assignments/new"
@@ -71,6 +72,13 @@ export function DashboardShell({
   return (
     <div className="dashboard-shell">
       <SessionHydrator />
+      {authStatus === "unknown" ? (
+        <section className="page-panel">
+          <div className="loading-panel">Checking session...</div>
+        </section>
+      ) : null}
+      {authStatus !== "unknown" ? (
+        <>
       <aside className="sidebar desktop-only">
         <Link href="/assignments" className="logo">
           <div className="brand-badge">V</div>
@@ -180,6 +188,8 @@ export function DashboardShell({
           <AppIcon name="plus" className="nav-icon" />
         </Link>
       </nav>
+        </>
+      ) : null}
     </div>
   );
 }

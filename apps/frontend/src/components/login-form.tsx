@@ -9,6 +9,7 @@ import { loginTeacher } from "../lib/api";
 export function LoginForm() {
   const router = useRouter();
   const setTeacher = useAppStore((state) => state.setTeacher);
+  const setAuthStatus = useAppStore((state) => state.setAuthStatus);
   const [email, setEmail] = useState("teacher@vedaai.dev");
   const [password, setPassword] = useState("Teacher123!");
   const [error, setError] = useState("");
@@ -26,6 +27,7 @@ export function LoginForm() {
 
     try {
       const response = await loginTeacher(email, password);
+      setAuthStatus("authenticated");
       setTeacher(response.teacher);
       router.push("/assignments");
     } catch (submissionError) {

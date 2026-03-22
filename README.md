@@ -9,7 +9,7 @@ VedaAI is a monorepo for an AI Assessment Creator built from the supplied Figma 
 - Database: MongoDB
 - Queue and cache: Redis + BullMQ
 - Real-time updates: WebSocket
-- AI generation: OpenAI with structured JSON parsing and a deterministic fallback
+- AI generation: Gemini via the OpenAI-compatible API, with a deterministic fallback
 
 ## Features
 
@@ -63,7 +63,7 @@ Required variables:
 - `MONGODB_URI`
 - `REDIS_URL`
 - `SESSION_SECRET`
-- `OPENAI_API_KEY`
+- `GEMINI_API_KEY`
 - `BACKEND_PORT`
 - `FRONTEND_URL`
 
@@ -140,7 +140,7 @@ You can change both values through the root `.env`.
 - Shared contracts are defined in `packages/shared` using Zod to keep the frontend and backend aligned.
 - The backend never returns raw LLM text to the UI. It validates and normalizes the generated response first.
 - The frontend uses one responsive route set for desktop and mobile instead of separate applications.
-- The current implementation includes a deterministic fallback generator when `OPENAI_API_KEY` is missing or the provider call fails, so the full product flow remains testable locally.
+- The current implementation includes a deterministic fallback generator when `GEMINI_API_KEY` is missing or the provider call fails, so the full product flow remains testable locally.
 
 ## Current Notes
 

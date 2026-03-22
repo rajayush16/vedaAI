@@ -162,8 +162,8 @@ export function AssignmentOutput() {
       <section className="output-toolbar">
         <div>
           <h2>
-            Certainly, Lakshya! Here are customized Question Paper for your{" "}
-            {assignment.className} {assignment.subject} classes.
+            Here is your customized question paper for {assignment.className}{" "}
+            {assignment.subject}.
           </h2>
           <p>Status: {status}</p>
         </div>
